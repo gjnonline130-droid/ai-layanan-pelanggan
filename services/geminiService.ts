@@ -1,13 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  throw new Error("API_KEY is not defined in environment variables");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
-
 const systemInstruction = `Anda adalah asisten AI customer service untuk Toserba Griya Jatinangor. Kami adalah toko retail yang melayani transaksi melalui kassa di toko dan juga transaksi online. Tugas Anda adalah mengubah "inti jawaban" dari tim kami menjadi sebuah balasan yang lengkap, profesional, dan formal, namun tetap simpel dan mudah dimengerti oleh pelanggan.
 
 Anda akan menerima tiga input:
@@ -38,6 +30,15 @@ export const generateComplaintResponse = async (
   coreAnswer: string, 
   image?: ImagePart | null
 ): Promise<string> => {
+  const API_KEY = process.env.API_KEY;
+
+  if (!API_KEY) {
+    console.error("API_KEY is not defined in environment variables");
+    throw new Error("API Key tidak terkonfigurasi. Aplikasi tidak dapat terhubung ke layanan AI.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+
   try {
     const promptText = `
     Keluhan Pelanggan (teks): "${complaint || '(Tidak ada teks, lihat gambar terlampir)'}"
@@ -47,8 +48,6 @@ export const generateComplaintResponse = async (
     Tugas: Berdasarkan keluhan pelanggan (baik dari teks maupun gambar yang mungkin dilampirkan) dan inti jawaban dari tim kami, kembangkan menjadi balasan customer service yang formal, singkat, dan jelas sesuai instruksi sistem.
     `;
     
-    // FIX: Changed the type of promptParts to correctly handle both image and text part objects.
-    // The Gemini API expects an array of Part objects for multipart content, not strings.
     const promptParts: (ImagePart | { text: string })[] = [];
 
     if (image) {
